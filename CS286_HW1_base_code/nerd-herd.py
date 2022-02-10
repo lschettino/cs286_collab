@@ -59,7 +59,6 @@ class Env:
     def update_grid(self):
         grid = [[set() for i in range(self.size)] for i in range(self.size)]
         for b in self.bots:
-            print(b.x, b.y)
             grid[b.x][b.y].add(b)
 	
         self.grid = grid 
@@ -243,6 +242,19 @@ class Env:
         self.display_grid()
 
 
+    def is_aggregate(self, loc): 
+        for bot in self.bots: 
+            if (bot.x, bot.y) != loc: 
+                return False 
+        return True    
+
+   def flock_aggregate(self, flock, loc): 
+        for bot in flock: 
+            if (bot.x, bot.y) != loc: 
+                return False 
+        return True    
+
+
     def aggregate(self, loc):
         '''
         Move all bots to grid coordinate loc (tuple).
@@ -252,13 +264,8 @@ class Env:
         Use move_bot() and _move_towards() functions
         '''
         # am i aggregate? (outer loop) 
-	# move the bots 
-        def is_aggregate(): 
-            for bot in self.bots: 
-                if (bot.x, bot.y) != loc: 
-                    return False 
-            return True     
-        while not is_aggregate(): 
+	# move the bots  
+        while not self.is_aggregate(loc): 
             for bot in self.bots: 
                 if (bot.x, bot.y) != loc: 
                     self._move_towards_step(bot, loc) 
@@ -279,10 +286,8 @@ class Env:
         if flock: 
             print("flock is true")   
             for each_flock in self.flocks: 
-                print("looping through flock")
                 loc = (random.randint(0, self.size), random.randint(0, self.size))
                 for bot in each_flock: 
-                    print(str(bot.x) + "," + str(bot.y)) 
                     self._move_towards_step(bot, loc)
         else: 
             for bot in self.bots: 
@@ -304,6 +309,7 @@ class Env:
             for j, flock in enumerate(self.flocks): 
                 for bot in flock: 
                     self._move_away_step(bot, centroids[j])
+            self.display_grid()
  
 
     
@@ -337,7 +343,41 @@ class Env:
         Aggregate bots into one or more flocks, each using sensing radius of sense_r (int).
         Use bot_sense() and update_flocks() functions
         '''
-        pass
+        # for bots 
+        #      bot sense 
+        # update_flocks() 
+        # while not is_aggregate(): 
+        #    for flock in flocks:
+        #      aggregate in flock centroid 
+        #    safe_wander()
+        #    for bot in bots: 
+        #        bot_sense()
+        #    update_flocks()
+        def check_aggregate(): 
+            bot = self.bots[0]
+            loc = bot.x, bot.y
+            return self.is_aggregate(loc)
+        for bot in self.bots:
+            self.bot_sense(bot, sense_r)
+        self.update_flocks()
+        while not check_aggregate(): 
+            for flock in self.flocks: 
+                flock_centroid = self.get_centroid(flock)
+                while not self.flock_aggregate(flock, flock_centroid): 
+                    for bot in flock: 
+                        if (bot.x, bot.y) != flock_centroid: 
+                            self._move_towards_step(bot, flock_centroid)
+            self.safe_wander(True) 
+            for bot in self.bots: 
+                 self.bot_sense(sense_r)
+            self.update_flocks() 
+ 
+
+
+            
+
+        
+        
 
 
     def safe_wander_sense(self, flock=False):
@@ -374,10 +414,10 @@ if __name__ == "__main__":
     env = Env(bots, 14)
 
 
-    env.flock((2, 2)) 
-
+    #env.flock((2, 2)) 
+    env.aggregate_sense(3)
     
 
-    # env.flock((5,5))
+    #env.flock((5,5))
 
     # env.flock_sense(2)
