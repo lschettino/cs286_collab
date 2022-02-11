@@ -2,7 +2,7 @@
 Harvard CS 286 Spring 2022
 '''
 
-import rospy
+#import rospy
 
 '''
 Import the modules required for using ROS turtlesim services.

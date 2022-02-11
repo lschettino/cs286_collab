@@ -4,8 +4,9 @@ Harvard CS 286 Spring 2022
 
 import random
 from ninja_turtles import NinjaTurtles
-import rospy
+#import rospy
 import time
+import pprint
 
 class Robot:
     def __init__(self, x, y, name):
@@ -143,27 +144,35 @@ class Env:
         '''
         Your code to update x_c, y_c
         '''
-        n_robots = len(flock)
+    #     n_robots = len(flock)
     
-    # what is the centroid of a flock with no robots? 
-        if n_robots > 0: 
-            x_sum = 0 
-            y_sum = 0 
-            for bot in self.bots:
-                x_sum += bot.x 
-                y_sum += bot.y 
-            x_c = x_sum / n_robots
-            y_c = y_sum / n_robots 
-        else: 
-            n_robots = len(self.bots)
-            x_sum = 0 
-            y_sum = 0
-            for robot in self.bots: 
-                x_sum += bot.x 
-                y_sum += bot.y 
-            x_c = x_sum / n_robots
-            y_c = y_sum / n_robots
-        return (int(x_c), int(y_c))
+    # # what is the centroid of a flock with no robots? 
+    #     if n_robots > 0: 
+    #         x_sum = 0 
+    #         y_sum = 0 
+    #         for bot in self.bots:
+    #             x_sum += bot.x 
+    #             y_sum += bot.y 
+    #         x_c = x_sum / n_robots
+    #         y_c = y_sum / n_robots 
+    #     else: 
+    #         n_robots = len(self.bots)
+    #         x_sum = 0 
+    #         y_sum = 0
+    #         for robot in self.bots: 
+    #             x_sum += bot.x 
+    #             y_sum += bot.y 
+    #         x_c = x_sum / n_robots
+    #         y_c = y_sum / n_robots
+    #     return (int(x_c), int(y_c))
+
+        if self.num_bots == 0:
+            print('There are no robots for which to compute ')
+        
+        x_c = int(sum([bot.x for bot in flock])/len(flock))
+        y_c = int(sum([bot.y for bot in flock])/len(flock))
+
+        return (x_c, y_c)
 
     
     def bot_sense(self, bot, sense_r):
@@ -172,44 +181,56 @@ class Env:
         Hint: self.grid stores the positions of all the bots (Robot obj) in a given iteration. This can be used to find the neightbors of a bot using its position.
         Note: A bot is not a neighbor of itself.
         '''
-        # should we form a "circle" or a square with the radius? 
         neighbors = set()
-        x, y = bot.x, bot.y 
-        min_x = max(x - sense_r, 0) 
-        max_x = min(x + sense_r, self.size - 1) 
-        min_y = max(y - sense_r, 0) 
-        max_y = min(y + sense_r, self.size - 1)  
-        for i in range(min_x, max_x): 
-            for j in range(min_y, max_y): 
-                neighbors.union(self.grid[i][j])
+        x_low = max(bot.x - sense_r, 0)
+        x_high = min(bot.x + sense_r, self.size-1)
+        y_low = max(bot.y - sense_r, 0)
+        y_high = min(bot.y + sense_r, self.size-1)
+
+        
+        for i in range(x_low, x_high + 1): 
+            for j in range(y_low, y_high + 1): 
+                neighbors = neighbors.union(self.grid[i][j])
+
+        assert bot in neighbors, f"""Bot {bot.x,bot.y} {self.grid[bot.x][bot.y]} is not in the neighborhood {neighbors}\n
+        Range x:{max(bot.x - sense_r, 0), min(bot.x + sense_r + 1, self.size)}, y: {max(bot.y - sense_r, 0), min(bot.y + sense_r + 1, self.size)}"""
         neighbors.remove(bot) 
         bot.neighbors = neighbors  
 
 
-    def update_flocks(self):
+    def update_flocks(self, grouping_alg = 'greedy'):
         '''
         Generate flock(s) at each timestep based on the position of each robot and the robots within its neighborhood
         '''
-        
 
-        '''
-            Your code to update self.flocks
-        '''
         flocks = [] 
-        bot_in_flocks = set()
-        for bot in self.bots: 
-            # ensure each bot can only belong to one flock 
-            if bot in bot_in_flocks: 
-                continue 
-            else: 
-                # include bot in flock
-                new_flock = set([bot])
-                for neighbor in bot.neighbors: 
-                    # add neighbors to flock if they aren't in another flock
-                    if neighbor not in bot_in_flocks:
-                        new_flock.add(neighbor)
-                bot_in_flocks.union(new_flock)
-                flocks.append(new_flock)
+
+        if grouping_alg == 'greedy':
+            bot_in_flocks = set()
+
+            for bot in self.bots: 
+                # ensure each bot can only belong to one flock 
+                if bot not in bot_in_flocks: 
+                    # only worry about bots that are not in a flock already
+                    
+                    # Create new flock with current bot
+                    new_flock = set([bot])
+                    for neighbor in bot.neighbors: 
+                        # add neighbors to flock if they aren't in another flock
+                        if neighbor not in bot_in_flocks:
+                            new_flock.add(neighbor)
+                    
+                    bot_in_flocks = bot_in_flocks.union(new_flock)
+                    flocks.append(new_flock)
+
+
+
+        elif grouping_alg == 'transitive':
+            # If two non-neighboring robots have a neighbor in common, they are part of the same flock
+            for bot in self.bots:
+                a=0
+
+        print(f'After updating, there are {len(flocks)} flocks')
         self.flocks = flocks
                 
         
@@ -231,8 +252,8 @@ class Env:
         self.display_grid()
         time.sleep(3)
         
-        for count in range(t):
-            print("SAFE WANDER", count)
+        for i in range(t):
+            print(f"SAFE WANDER {i}")
             self.safe_wander(True)
             self.display_grid()
         
@@ -241,18 +262,6 @@ class Env:
         self.disperse()
         self.display_grid()
 
-
-    def is_aggregate(self, loc): 
-        for bot in self.bots: 
-            if (bot.x, bot.y) != loc: 
-                return False 
-        return True    
-
-   def flock_aggregate(self, flock, loc): 
-        for bot in flock: 
-            if (bot.x, bot.y) != loc: 
-                return False 
-        return True    
 
 
     def aggregate(self, loc):
@@ -263,15 +272,14 @@ class Env:
         
         Use move_bot() and _move_towards() functions
         '''
-        # am i aggregate? (outer loop) 
-	# move the bots  
-        while not self.is_aggregate(loc): 
+
+        # Check that all of the bots are at the given grid coordinate
+        while not all([(bot.x,bot.y) == loc for bot in self.bots]): 
             for bot in self.bots: 
                 if (bot.x, bot.y) != loc: 
                     self._move_towards_step(bot, loc) 
 
                 
-    # one single flock for part a 
 
     def safe_wander(self, flock=False):
         '''
@@ -281,15 +289,17 @@ class Env:
 
         Use move_bot() and _move_random_step() functions
         '''
-    # all bots in a flock move in the same direction 
-# in general, if everyone is connected 
+        # all bots in a flock move in the same direction 
         if flock: 
-            print("flock is true")   
-            for each_flock in self.flocks: 
+            print("\tWander as a flock")   
+            for flock in self.flocks: 
+                # Generate random location to move towards
                 loc = (random.randint(0, self.size), random.randint(0, self.size))
-                for bot in each_flock: 
+
+                # Move every bot in the flock towards the chosen random location 
+                for bot in flock: 
                     self._move_towards_step(bot, loc)
-        else: 
+        else:
             for bot in self.bots: 
                 self._move_random_step(bot)
     
@@ -300,7 +310,7 @@ class Env:
         Move all bots away from centroid, each in a random direction, for 3 steps.
         Use the move_bot(), _move_away_step() and get_centroid() functions.
         '''
-       # move in direction opposite to the vector pointing to centroid 
+        # move in direction opposite to the vector pointing to centroid 
         centroids = [] 
         for flock in self.flocks: 
             x_c, y_c = self.get_centroid(flock)
@@ -316,6 +326,9 @@ class Env:
     ################ Centralized communication ######################
 
 
+
+
+
     ################ Decentralized Communication ######################
     def flock_sense(self, sense_r, t=5):
         '''
@@ -326,11 +339,16 @@ class Env:
         '''
         print("AGGREGATE")
         self.aggregate_sense(sense_r)
+        self.display_grid()
+
         time.sleep(3)
+
 
         for count in range(t):
             print("SAFE WANDER", count)
             self.safe_wander(True)
+            self.display_grid()
+
         
         time.sleep(3)
         print("DISPERSE")
@@ -343,41 +361,49 @@ class Env:
         Aggregate bots into one or more flocks, each using sensing radius of sense_r (int).
         Use bot_sense() and update_flocks() functions
         '''
-        # for bots 
-        #      bot sense 
-        # update_flocks() 
-        # while not is_aggregate(): 
-        #    for flock in flocks:
-        #      aggregate in flock centroid 
-        #    safe_wander()
-        #    for bot in bots: 
-        #        bot_sense()
-        #    update_flocks()
-        def check_aggregate(): 
+        
+        
+        def is_abs_aggregate():
+            ''' 
+            Check wether all bots in the grid are in the same location  
+            
+            '''
+            
+            # Select first robot in the grid to see if all the rest are at its location
             bot = self.bots[0]
             loc = bot.x, bot.y
-            return self.is_aggregate(loc)
+            return all([(bot.x,bot.y) == loc for bot in self.bots])
+
         for bot in self.bots:
             self.bot_sense(bot, sense_r)
         self.update_flocks()
-        while not check_aggregate(): 
-            for flock in self.flocks: 
+
+        
+
+        while not is_abs_aggregate():
+            #print(f'All the robots are not absolutely aggregate, there exists {len(self.flocks)} distinct flocks')
+            
+            for index, flock in enumerate(self.flocks): 
                 flock_centroid = self.get_centroid(flock)
-                while not self.flock_aggregate(flock, flock_centroid): 
+                #print(f'\t Aggregating flock nº{index}')
+                while not all([(bot.x,bot.y) == flock_centroid for bot in flock]):
+                    #print(f'\t\tTowards centroid {flock_centroid}')
+
+                    # move robots towards the centroid
                     for bot in flock: 
+                        # Only move the bots that are not at the centroid
                         if (bot.x, bot.y) != flock_centroid: 
                             self._move_towards_step(bot, flock_centroid)
+                    
+                    # Update flock centroid after all robots have moved in the direction of the centroid
+                    flock_centroid = self.get_centroid(flock)
+                
             self.safe_wander(True) 
+            self.update_grid() 
             for bot in self.bots: 
-                 self.bot_sense(sense_r)
+                 self.bot_sense(bot,sense_r)
             self.update_flocks() 
  
-
-
-            
-
-        
-        
 
 
     def safe_wander_sense(self, flock=False):
@@ -386,21 +412,24 @@ class Env:
         If flock, all bots in a flock move in same random direction.
         Otherwise, each bot moves in its own random direction
         '''
-        pass
+        
+        # all bots in a flock move in the same direction 
+        self.safe_wander(True)
 
 
     def disperse_sense(self):
         '''
         Move all bots away from their respective flock's centroid.
         '''
-        pass
+
+        self.disperse()
+        
 
     ################ Decentralized Communication ######################
 
 
 if __name__ == "__main__":
-    rospy.init_node("Cowabunga")
-    
+    #rospy.init_node("Cowabunga")
     #Use the same names when generating results for part HW1 Q1.(d)
     bot1 = Robot(1,1,'t1')
     bot2 = Robot(9,1,'t2')
@@ -408,16 +437,23 @@ if __name__ == "__main__":
     bot4 = Robot(1, 5,'t4')
 
 
+    env_size = 14
 
     bots = [bot1, bot2, bot3, bot4]
 
-    env = Env(bots, 14)
+    extra_robots = [Robot((i*7-2)%env_size,(i*3)%env_size,f"t{5+i}") for i in range(5)]
+    bots += extra_robots
+
+    print(f'Running with {len(bots)} robots')
+
+    env = Env(bots, env_size)
 
 
     #env.flock((2, 2)) 
-    env.aggregate_sense(3)
+    #env.aggregate((2,2))
+    
     
 
     #env.flock((5,5))
 
-    # env.flock_sense(2)
+    env.flock_sense(5)
