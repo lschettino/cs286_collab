@@ -29,3 +29,6 @@ for i in range(N):
 	print(result)
 	print(used)
 
+
+
+
