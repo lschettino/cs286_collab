@@ -71,7 +71,61 @@ def solve_CVXPY(N, R, Q, C):
         print('The Optimizer did not find a solution')
     
   
+def unit_test():
 
+    #
+    # Unit test 0
+    #
+    N_0 = 2
+    R_0 = 6
+    Q_0 = [[1,40,1,40,9,3],
+           [1,20,1,6,9,10]]
+
+    C_0 = [[1,1,1,1,1,1],
+           [1,1,1,1,1,1]]
+
+    results_0 = solve_CVXPY(N_0, R_0, Q_0, C_0)
+
+    # The optimal solution is for task 0 to be assigned to robot 3 and task 1 to be assigned to robot 1
+    opt_sol_0 = np.array([[0,3],[1,1]])
+
+    if np.array_equal(results_0, opt_sol_0):
+        print('Unit test 0 passed')
+    else:
+        print('Unit test 1 FAILED')
+        
+
+    #
+    # Unit test 1 
+    # Testing:
+    # - negative value utilities
+    # - Ties in utility for a given task
+    #
+
+    N_1 = 4
+    R_1 = 6
+    Q_1 = [[1,40,1,40,1,1],
+           [1,20,1,1,1,60],
+           [1,40,1,1,1,1],
+           [30,1,1,1,1,100]]
+
+    C_1 = [[1,1,1,1,1,1],
+           [1,1,1,1,1,1],
+           [1,1,1,1,1,1],
+           [1,1,1,1,1,200]]
+
+    results_1 = solve_CVXPY(N_1, R_1, Q_1, C_1)
+
+    opt_sol_1 = np.array([[0,3],[1,5],[2,1],[3,0]])
+
+
+    if np.array_equal(results_1, opt_sol_1):
+        print('Unit test 1 passed')
+    else:
+        print('Unit test 1 FAILED')
+        print(f'Expected solution is \n {opt_sol_1}')
+
+    
 
        
 
@@ -100,4 +154,5 @@ print(Q)
 print(C)
 print("Solving...")
 print(solve_CVXPY(N, R, Q, C))
+print(unit_test())
 #print(solve(N, R, Q, C))
