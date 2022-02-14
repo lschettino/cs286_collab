@@ -30,8 +30,6 @@ def solve(N, R, Q, C):
     problem.solve(solver="GLPK_MI", verbose=False)
 
     if problem.status in ["optimal", "optimal_inaccurate"]:
-        print('The Optimizer found a solution')
-
         # Binarize solutions (Opimizer might not return boolean variables but rather a range from 0 to 1)
         assignments = (np.array(assignments.value) > 0.5) * 1.0
 
