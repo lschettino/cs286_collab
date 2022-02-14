@@ -23,8 +23,8 @@ class NinjaTurtles:
         try:
             self.kill_turtle = rospy.ServiceProxy('/kill', turtlesim.srv.Kill)
             self.kill_turtle(name)
-        except rospy.ServiceException, rospy.ROSInterruptException as e:
-            print(e) 
+        except rospy.ServiceException as e:
+            pass
         
     def add_bot(self):
         '''
@@ -53,7 +53,6 @@ if __name__ == "__main__":
     rospy.init_node("Cowabunga")
     t2 = NinjaTurtles(1,4,'t2')
     t2.add_bot()
-    t2.remove_bot('t2')
     t3 = NinjaTurtles(1,1,'t3')
     t3.add_bot()
     t3.go_to(5, 5)

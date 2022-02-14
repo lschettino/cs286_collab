@@ -144,28 +144,6 @@ class Env:
         '''
         Your code to update x_c, y_c
         '''
-    #     n_robots = len(flock)
-    
-    # # what is the centroid of a flock with no robots? 
-    #     if n_robots > 0: 
-    #         x_sum = 0 
-    #         y_sum = 0 
-    #         for bot in self.bots:
-    #             x_sum += bot.x 
-    #             y_sum += bot.y 
-    #         x_c = x_sum / n_robots
-    #         y_c = y_sum / n_robots 
-    #     else: 
-    #         n_robots = len(self.bots)
-    #         x_sum = 0 
-    #         y_sum = 0
-    #         for robot in self.bots: 
-    #             x_sum += bot.x 
-    #             y_sum += bot.y 
-    #         x_c = x_sum / n_robots
-    #         y_c = y_sum / n_robots
-    #     return (int(x_c), int(y_c))
-
         if self.num_bots == 0:
             print('There are no robots for which to compute ')
         
@@ -378,16 +356,13 @@ class Env:
             self.bot_sense(bot, sense_r)
         self.update_flocks()
 
-        
-
-        while not is_abs_aggregate():
-            #print(f'All the robots are not absolutely aggregate, there exists {len(self.flocks)} distinct flocks')
-            
+       
+        while not is_abs_aggregate():            
             for index, flock in enumerate(self.flocks): 
                 flock_centroid = self.get_centroid(flock)
-                #print(f'\t Aggregating flock nº{index}')
+
                 while not all([(bot.x,bot.y) == flock_centroid for bot in flock]):
-                    #print(f'\t\tTowards centroid {flock_centroid}')
+
 
                     # move robots towards the centroid
                     for bot in flock: 
@@ -433,27 +408,30 @@ if __name__ == "__main__":
     #Use the same names when generating results for part HW1 Q1.(d)
     bot1 = Robot(1,1,'t1')
     bot2 = Robot(9,1,'t2')
-    bot3 = Robot(9,9,'t3')
+    bot3 = Robot(9,3,'t3')
     bot4 = Robot(1, 5,'t4')
 
+    #bot5 = Robot(2,4,'t5')
+    #bot6 = Robot(6,4,'t6')
+    #bot7 = Robot(9,7,'t7')
+    #bot8 = Robot(2,6,'t8')
+
+    #bot9 = Robot(1,1,'t9')
+    #bot10 = Robot(4,5,'t10')
+    #bot11 = Robot(8,8,'t11')
+    #bot12 = Robot(1,8,'t12')
 
     env_size = 14
 
     bots = [bot1, bot2, bot3, bot4]
 
-    extra_robots = [Robot((i*7-2)%env_size,(i*3)%env_size,f"t{5+i}") for i in range(5)]
-    bots += extra_robots
 
     print(f'Running with {len(bots)} robots')
 
     env = Env(bots, env_size)
 
-
-    #env.flock((2, 2)) 
-    #env.aggregate((2,2))
-    
-    
-
     #env.flock((5,5))
-
-    env.flock_sense(5)
+    
+    time.sleep(3)
+    env.flock_sense(3)
+    
