@@ -10,6 +10,11 @@ import numpy as np
 import cvxpy as cp
 
 def solve(N, R, Q, C):
+    if R < N:
+        print("This linear optimization algorithm doesn't have a solution: \n\t-There are more tasks than robots")
+        return 0
+    
+    # Utility matrix
     U = np.array(Q) - np.array(C) 
 
     assignments = cp.Variable(shape=(N,R), boolean=True)
@@ -38,10 +43,11 @@ def solve(N, R, Q, C):
 
         # Print results
         for task, robot in results:
-            print(f'n_{task} assigned to r_{robot} at a utility of {U[task][robot]}')
+            print(f'\tn_{task} assigned to r_{robot} at a utility of q-c={U[task][robot]}')
         return results
     else:
         print('The Optimizer did not find a solution')
+        return 0
     
   
 def unit_test():
@@ -49,6 +55,7 @@ def unit_test():
     #
     # Unit test 0
     #
+    print('\nUnit Test 0: Simple allocation')
     N_0 = 2
     R_0 = 6
     Q_0 = [[1,40,1,40,9,3],
@@ -63,10 +70,11 @@ def unit_test():
     opt_sol_0 = np.array([[0,3],[1,1]])
 
     if np.array_equal(results_0, opt_sol_0):
-        print('Unit test 0 passed')
+        print('\tUnit test 0 passed')
     else:
-        print('Unit test 1 FAILED')
-        
+        print('\tUnit test 1 FAILED')
+        print(f'Optimal solution is \n {opt_sol_0}')
+   
 
     #
     # Unit test 1 
@@ -74,7 +82,7 @@ def unit_test():
     # - negative value utilities
     # - Ties in utility for a given task
     #
-
+    print('\nUnit Test 1: Allocation with negative utility and ties')
     N_1 = 4
     R_1 = 6
     Q_1 = [[1,40,1,40,1,1],
@@ -93,13 +101,51 @@ def unit_test():
 
 
     if np.array_equal(results_1, opt_sol_1):
-        print('Unit test 1 passed')
+        print('\tUnit test 1 passed')
     else:
-        print('Unit test 1 FAILED')
-        print(f'Expected solution is \n {opt_sol_1}')
+        print('\tUnit test 1 FAILED')
+        print(f'Optimal solution is \n {opt_sol_1}')
+
+    
+
+    #
+    # Unit test 2 
+    # Testing:
+    # - Less robots than tasks available (N > R)
+    #
+
+    print('\nUnit Test 2: Allocation with N>R')
+    N_1 = 4
+    R_1 = 2
+    Q_1 = [[1,40],
+           [1,20],
+           [1,40],
+           [30,1]]
+    C_1 = [[1,1],
+           [1,1],
+           [1,1],
+           [1,1]]
+
+    results_2 = solve(N_1, R_1, Q_1, C_1)
+
+    # Expected solution if the algorithm works correctly. 
+    # In this case, there should not be a solution
+    expected_sol_2 = 0
+
+    # No solution
+    opt_sol_2 = 0
+
+
+    if results_2 == expected_sol_2:
+        print('\tUnit test 1 passed')
+    else:
+        print('\tUnit test 1 FAILED')
+        print(f'\tExpected solution is \n {expected_sol_2}')
+    print('\n\n')
 
 
 if __name__ == "__main__":
+    unit_test()
 
     print("Input N , R")
     N, R = map(int, input().split())
@@ -117,4 +163,3 @@ if __name__ == "__main__":
 
     print("Solving...")
     solve(N, R, Q, C)
-    print(unit_test())
