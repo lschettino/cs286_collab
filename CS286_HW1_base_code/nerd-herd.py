@@ -176,43 +176,29 @@ class Env:
         bot.neighbors = neighbors  
 
 
-    def update_flocks(self, grouping_alg = 'greedy'):
+    def update_flocks(self):
         '''
         Generate flock(s) at each timestep based on the position of each robot and the robots within its neighborhood
         '''
 
         flocks = [] 
+        bot_in_flocks = set()
 
-        if grouping_alg == 'greedy':
-            bot_in_flocks = set()
-
-            for bot in self.bots: 
-                # ensure each bot can only belong to one flock 
-                if bot not in bot_in_flocks: 
-                    # only worry about bots that are not in a flock already
+        for bot in self.bots: 
+            # ensure each bot can only belong to one flock 
+            if bot not in bot_in_flocks: 
+                # only worry about bots that are not in a flock already
                     
-                    # Create new flock with current bot
-                    new_flock = set([bot])
-                    for neighbor in bot.neighbors: 
-                        # add neighbors to flock if they aren't in another flock
-                        if neighbor not in bot_in_flocks:
-                            new_flock.add(neighbor)
+                # Create new flock with current bot
+                new_flock = set([bot])
+                for neighbor in bot.neighbors: 
+                    # add neighbors to flock if they aren't in another flock
+                    if neighbor not in bot_in_flocks:
+                        new_flock.add(neighbor)
                     
-                    bot_in_flocks = bot_in_flocks.union(new_flock)
-                    flocks.append(new_flock)
+                bot_in_flocks = bot_in_flocks.union(new_flock)
+                flocks.append(new_flock)
 
-
-
-        elif grouping_alg == 'transitive':
-            # If two non-neighboring robots have a neighbor in common, they are part of the same flock
-            for bot in self.bots:
-                a=0
-
-        print(f'After updating, there are {len(flocks)} flocks')
-        self.flocks = flocks
-                
-        
-    
     
     ################ General Helper Functions ######################
 
@@ -268,8 +254,7 @@ class Env:
         Use move_bot() and _move_random_step() functions
         '''
         # all bots in a flock move in the same direction 
-        if flock: 
-            print("\tWander as a flock")   
+        if flock:   
             for flock in self.flocks: 
                 # Generate random location to move towards
                 loc = (random.randint(0, self.size), random.randint(0, self.size))
@@ -277,6 +262,7 @@ class Env:
                 # Move every bot in the flock towards the chosen random location 
                 for bot in flock: 
                     self._move_towards_step(bot, loc)
+        # each robot will move in a random direction 
         else:
             for bot in self.bots: 
                 self._move_random_step(bot)
@@ -362,8 +348,6 @@ class Env:
                 flock_centroid = self.get_centroid(flock)
 
                 while not all([(bot.x,bot.y) == flock_centroid for bot in flock]):
-
-
                     # move robots towards the centroid
                     for bot in flock: 
                         # Only move the bots that are not at the centroid
@@ -387,9 +371,7 @@ class Env:
         If flock, all bots in a flock move in same random direction.
         Otherwise, each bot moves in its own random direction
         '''
-        
-        # all bots in a flock move in the same direction 
-        self.safe_wander(True)
+        self.safe_wander(flock)
 
 
     def disperse_sense(self):
@@ -410,25 +392,12 @@ if __name__ == "__main__":
     bot2 = Robot(9,1,'t2')
     bot3 = Robot(9,3,'t3')
     bot4 = Robot(1, 5,'t4')
-
-    #bot5 = Robot(2,4,'t5')
-    #bot6 = Robot(6,4,'t6')
-    #bot7 = Robot(9,7,'t7')
-    #bot8 = Robot(2,6,'t8')
-
-    #bot9 = Robot(1,1,'t9')
-    #bot10 = Robot(4,5,'t10')
-    #bot11 = Robot(8,8,'t11')
-    #bot12 = Robot(1,8,'t12')
-
     env_size = 14
 
     bots = [bot1, bot2, bot3, bot4]
 
-
-    print(f'Running with {len(bots)} robots')
-
     env = Env(bots, env_size)
+    env.display_grid()
 
     #env.flock((5,5))
     
