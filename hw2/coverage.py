@@ -14,8 +14,9 @@ class Robot(object):
         self.k = k * 0.001
 
     def update(self):     # update the robot state
-
+        #print("update: ", self.k * self.input)
         self._state += self.k * self.input
+        #print(self.state)
         self._stoch_state = self._state + np.random.randn(2)
         self.input = [0, 0]
 
@@ -56,13 +57,16 @@ class Environment(object):
 
         # Get list of all the costs for every robot
         f_lists = [self.f(robot.state, point) for robot in self.robots]
-        
+        #print(f_lists)
+        if self.alpha < 0 and (np.any(f_lists == 0) or np.isnan(f_lists).any()): 
+            #print("entered if", [robot.state for robot in self.robots], point)
+            return 1
+
         # Apply power of alpha coeffient
-        raised_f = np.power(f_lists, value)
+        raised_f = np.power(f_lists, self.alpha)
 
         # Compute mixing function as (sum of the f_i^alpha )^(1/alpha)
-        g_alpha = np.power(np.sum(raised_f), 1/value)
-
+        g_alpha = np.power(np.sum(raised_f), 1/self.alpha)
         return g_alpha
 
     def f(self, p,q):
@@ -75,7 +79,8 @@ class Environment(object):
         """
 
         # We define the distance to be the euclidean distance between the 2 points
-        return np.linalg.norm(p-q)
+        print(p, q)
+        return np.sqrt(sum((q - p)**2))
 
 
     def phi(self,q):
@@ -91,39 +96,45 @@ class Environment(object):
         # else:
         #     rv =  multivariate_normal(mean = self.target, cov = self.cov)
 
-        for x in self.pointsx:
-            for y in self.pointsy:
-                value = 1
+        #for x in self.pointsx:
+          #  for y in self.pointsy:
+             #   value = 1
                 # value = rv.pdf((x,y))
 
-                self.mix_func(np.array([x, y]), value)
+               # self.mix_func(np.array([x, y]), value)
 
 
         #TODO Add checks for alpha and undefined variables
 
 
-        for robot in self.robots:
-            # Accumulator variable for individual partial sums (each partial sum is a 2D array)
-            partial_sums_lst = []
+        
+        # Accumulator variable for individual partial sums (each partial sum is a 2D array)
+        robot_partial_sums = [[] for robot in env.robots]
+            
 
-            # Perform integral over Q space 
-            # (Space Q is modelled as discrete, hence a summation, over all the points is used to approximate the integral)
-            for x in self.pointsx:
-                for y in self.pointsy:
+        # Perform integral over Q space 
+        # (Space Q is modelled as discrete, hence a summation, over all the points is used to approximate the integral)
+        
+        for x in self.pointsx:
+            for y in self.pointsy:
 
-                    # Define point as a tuple of 2 coordinates
-                    q = np.array([x, y])
+                # Define point as a tuple of 2 coordinates
+                q = np.array([x, y])
                     
-                    g_alpha = self.mix_func(q,self.alpha)
-
+                g_alpha = self.mix_func(q)
+                for i, robot in enumerate(self.robots):
+                    
                     partial_sum = np.power(self.f(robot.state, q)/g_alpha, self.alpha-1) * (q - robot.state) * self.phi(q)
                     
-                    partial_sums_lst.append(partial_sum)         
+                    robot_partial_sums[i].append(partial_sum)         
 
             # Compute individual robot gradient p_i_dot as the sum of all of the partial sums
-            robot.input = np.sum(partial_sums_lst, axis=0)
-            print(robot.input)
-        
+        for i, robot in enumerate(self.robots):
+            sum_var = np.sum(robot_partial_sums[i], axis=0)
+            print("sum var", sum_var)
+            robot.input = sum_var #if not np.isnan(sum_var).any() else 0, 0 
+            
+       
 
     def moves(self):
         for bot in self.robots:
@@ -185,18 +196,16 @@ def run_grid(env, iter):
             print(k)
 
     # set up the plot
-    fig, ax = plt.subplots()
+    fig, ax= plt.subplots()
     points = []
 
     # plt the robot points
-    plt.axes(ax)
+
     for i in range(len(env.robots)):
-        plt.scatter(x[i], y[i], alpha=(i+1)/len(env.robots))
+        print(x[i], y[i])
+        ax.scatter(x[i], y[i], alpha=(i+1)/len(env.robots), label = "robot " + str(i)) 
         points.append([x[i][-1], y[i][-1]])
-    
-
-    
-
+       
     # if there is a target setup plot it
     # if(type(env.target) is np.ndarray):
     #     for i in range(env.target.shape[1]):
@@ -205,15 +214,15 @@ def run_grid(env, iter):
     # set polygon bounds
     bounds = Polygon([(0,0), (10,0), (10,10), (0, 10)])
     b_x, b_y = bounds.exterior.xy
-    plt.plot(b_x, b_y)        
+    ax.plot(b_x, b_y)        
 
     # set Voronoi
-    # vor = Voronoi(np.array(points))
-    # voronoi_plot_2d(vor, ax=ax)
+    #vor = Voronoi(np.array(points))
+    #voronoi_plot_2d(vor, ax=ax)
     
-    ax.set_xlim((-100, 11000))
-    ax.set_ylim((-100, 11000))
-
+    ax.set_xlim((-1, 11))
+    ax.set_ylim((-1, 11))
+    plt.legend() 
     plt.show()
     
 # generate target points
@@ -223,16 +232,16 @@ def target(iter):
 
 if __name__ == "__main__":
 
-    rob1 = Robot([4, 1], k=1)
-    rob2 = Robot([2, 2], k=1)
-    rob3 = Robot([5, 6], k=1)
-    rob4 = Robot([3, 4], k=1)
+    rob1 = Robot([4, 1], k=0.01)
+    rob2 = Robot([2, 2], k=0.01)
+    rob3 = Robot([5, 6], k=0.01)
+    rob4 = Robot([3, 4], k=0.01)
     robots = [rob1, rob2, rob3, rob4]
 
-    env = Environment(10, 10, 0.1, robots, alpha = 1)
+    env = Environment(10, 10, 0.1, robots, alpha = -1)
 
     #env = Environment(1, 1, 0.2, robots)
     # env = Environment(10, 10, 0.1, robots, target=(5,5))
 
 
-    run_grid(env, 5)
+    run_grid(env, 10)
