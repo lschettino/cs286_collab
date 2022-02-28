@@ -50,7 +50,6 @@ class Environment(object):
         self.cov = cov
 
         self.target = target
-        self.taken_flag = False 
 
 
     # calc the mixing function for the function aka g_alpha, also record f(p, q) and dist, point is np.array([x,y])
@@ -96,7 +95,7 @@ class Environment(object):
         if(type(self.target) is np.ndarray):
             rv =  multivariate_normal(mean = self.target[:, iter], cov = self.cov)
         else:
-            rv =  multivariate_normal(mean = self.target, cov = self.cov)
+            rv =  multivariate_normal(mean = self.target[-1], cov = self.cov)
 
         # for x in self.pointsx:
         #     for y in self.pointsy:
@@ -125,8 +124,8 @@ class Environment(object):
                 for i, robot in enumerate(self.robots):
                 # Define point as a tuple of 2 coordinates
                     q = np.array([x, y])
-                    
-                    value = rv.pdf((x,y)) 
+                    value = 1
+                    # value = rv.pdf((x,y)) 
                     g_alpha = self.mix_func(q, value=value)
                 
                     f_try = self.f(robot.state, q)
@@ -194,6 +193,7 @@ def run_grid(env, iter):
     # run environment for iterations
     for k in range(iter):
         print(k)
+        #env.target.append(target(k))
         env.update_gradient(k)
         env.moves()
 
@@ -225,7 +225,8 @@ def run_grid(env, iter):
     bounds = Polygon([(0,0), (10,0), (10,10), (0, 10)])
     b_x, b_y = bounds.exterior.xy
     ax.plot(b_x, b_y)  
-    ax.plot(env.target[0], env.target[1], marker="x", color = "red")
+    target_x, target_y = [x for x, _ in env.target], [y for _, y in env.target]
+    ax.plot(target_x, target_y, marker="x", color = "red")
 
     # set Voronoi
     vor = Voronoi(np.array(points))
@@ -239,7 +240,11 @@ def run_grid(env, iter):
 # generate target points
 def target(iter):
 
-    raise NotImplementedError
+    r = 3 
+    prd = 800
+    x = r * np.cos(2 * np.pi * iter/prd) + 5
+    y = r * np.sin(2 * np.pi * iter/prd) + 5
+    return np.array([x, y])
 
 if __name__ == "__main__":
 
@@ -249,10 +254,10 @@ if __name__ == "__main__":
     rob4 = Robot([3, 4])
     robots = [rob1, rob2, rob3, rob4]
 
-    #env = Environment(10, 10, 0.1, robots, alpha = -10)
+    env = Environment(10, 10, 0.1, robots, alpha = -10)
 
     #env = Environment(1, 1, 0.2, robots)
-    env = Environment(10, 10, 0.1, robots, target=(5,5))
+    #env = Environment(10, 10, 0.1, robots, target=(5,5))
 
 
     run_grid(env, 200)
