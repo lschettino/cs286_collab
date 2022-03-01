@@ -75,7 +75,9 @@ class Environment(object):
         ----------
         p:
         """
-        f_try = np.sqrt(sum((q - p)**2))  
+        #f_try = np.sqrt(sum((q - p)**2))
+        f_try = sum((q - p)**2) * 0.5
+        #f_try = 0.5 * np.abs((q - p))**2)
         # We define the distance to be the euclidean distance between the 2 points
         
         
@@ -215,7 +217,7 @@ def run_grid(env, iter):
 def target(iter):
 
     r = 3 
-    prd = 80
+    prd = 800
     lst = [] 
     
     for i in range(iter): 
@@ -226,10 +228,10 @@ def target(iter):
 
 if __name__ == "__main__":
 
-    rob1 = Robot([4, 1])
-    rob2 = Robot([2, 2])
-    rob3 = Robot([5, 6])
-    rob4 = Robot([3, 4])
+    rob1 = Robot([4, 1], k =1)
+    rob2 = Robot([2, 2], k =1)
+    rob3 = Robot([5, 6], k =1)
+    rob4 = Robot([3, 4], k =1)
     robots = [rob1, rob2, rob3, rob4]
 
     env = Environment(10, 10, 0.1, robots, alpha = -10, moving_target=True)
@@ -238,4 +240,4 @@ if __name__ == "__main__":
     # env = Environment(10, 10, 0.1, robots, alpha = 0.9)
 
 
-    run_grid(env, 20)
+    run_grid(env, 200)
