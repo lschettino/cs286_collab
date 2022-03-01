@@ -58,7 +58,7 @@ class Environment(object):
     def mix_func(self, point, value=1):   
 
         # Get list of all the costs for every robot
-        f_lists = np.array([self.f(robot.stoch_state, point) for robot in self.robots])
+        f_lists = np.array([self.f(robot.state, point) for robot in self.robots])
         
         # Apply power of alpha coeffient
         raised_f = f_lists ** self.alpha
@@ -104,7 +104,7 @@ class Environment(object):
             
         ps = []
         for i, robot in enumerate(self.robots):
-            ps.append(robot.stoch_state)
+            ps.append(robot.state)
         # Perform integral over Q space 
         # (Space Q is modelled as discrete, hence a summation, over all the points is used to approximate the integral)
         
@@ -117,11 +117,11 @@ class Environment(object):
                     g_alpha = self.mix_func(q)
                     value = phi(x, y)
                     
-                    f_try = self.f(robot.stoch_state, q)
+                    f_try = self.f(robot.state, q)
                     if ps[i][0] == x and ps[i][1] == y: 
                         f_try = 1 
                     
-                    partial_sum = ((f_try/g_alpha) ** (self.alpha-1)) * (q - robot.stoch_state) * value
+                    partial_sum = ((f_try/g_alpha) ** (self.alpha-1)) * (q - robot.state) * value
                     
                     robot_partial_sums[i].append(partial_sum)         
 
@@ -178,20 +178,25 @@ def run_grid(env, iter):
     for i in range(len(env.robots)):
         ax.scatter(x[i], y[i], alpha=(i+1)/len(env.robots), label = "robot " + str(i)) 
         points.append([x[i][-1], y[i][-1]])
-       
+    
   
     # set polygon bounds
     bounds = Polygon([(0,0), (10,0), (10,10), (0, 10)])
     b_x, b_y = bounds.exterior.xy
     ax.plot(b_x, b_y)  
     
+    
+    
     # logic for plotting target (if there is one)
-    if env.target: # checking whether target is empty 
-        if env.moving_target: # cheking whether target is list of moving targets 
+    if len(env.target) > 0: # checking whether target is empty 
+        print(type(env.target))
+        if isinstance(env.target, np.ndarray): # cheking whether target is list of moving targets 
             target_x, target_y = [x for x, _ in env.target], [y for _, y in env.target]
+            for i in range(len(env.target)): 
+                ax.plot(target_x[i], target_y[i], color="blue", marker='o', alpha=(i + 1)/len(env.target))
         else: # just a single target 
             target_x, target_y = env.target
-        ax.plot(target_x, target_y, marker="x", color = "red")
+            ax.plot(target_x, target_y, color="red")
         
         
     # set Voronoi for coverage problems 
@@ -204,13 +209,13 @@ def run_grid(env, iter):
     ax.set_xlim((-1, 11))
     ax.set_ylim((-1, 11))
     plt.legend() 
-    plt.savefig("./graphs/1e.png")
+    #plt.savefig("./graphs/1c.png")
     
 # generate target points
 def target(iter):
 
     r = 3 
-    prd = 800
+    prd = 80
     lst = [] 
     
     for i in range(iter): 
@@ -227,10 +232,10 @@ if __name__ == "__main__":
     rob4 = Robot([3, 4])
     robots = [rob1, rob2, rob3, rob4]
 
-    env = Environment(10, 10, 0.1, robots, alpha = -10)
+    env = Environment(10, 10, 0.1, robots, alpha = -10, moving_target=True)
 
     #env = Environment(1, 1, 0.2, robots)
     # env = Environment(10, 10, 0.1, robots, alpha = 0.9)
 
 
-    run_grid(env, 200)
+    run_grid(env, 20)
