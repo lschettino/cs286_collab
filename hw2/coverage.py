@@ -198,7 +198,7 @@ def run_grid(env, iter):
                 ax.plot(target_x[i], target_y[i], color="blue", marker='o', alpha=(i + 1)/len(env.target))
         else: # just a single target 
             target_x, target_y = env.target
-            ax.plot(target_x, target_y, color="red")
+            ax.plot(target_x, target_y, color="red", marker="x")
         
         
     # set Voronoi for coverage problems 
@@ -210,8 +210,12 @@ def run_grid(env, iter):
     
     ax.set_xlim((-1, 11))
     ax.set_ylim((-1, 11))
+    ax.set_title("Trajectory plots: alpha = 1, k = 0.1, \n constant importance, iter = 200")
+    # "Trajectory plots: alpha = -10, k = 1, \n constant importance values, iter = 200"
+    # "alpha = -10, k = 1, single target (5,5), iter = 200"
+    # "alpha = -10, k = 1, constant importance, iter = 200 with stochastic noise"
     plt.legend() 
-    #plt.savefig("./graphs/1c.png")
+    plt.savefig("./graphs/exp_k0.1_a1.png")
     
 # generate target points
 def target(iter):
@@ -228,13 +232,13 @@ def target(iter):
 
 if __name__ == "__main__":
 
-    rob1 = Robot([4, 1], k =1)
-    rob2 = Robot([2, 2], k =1)
-    rob3 = Robot([5, 6], k =1)
-    rob4 = Robot([3, 4], k =1)
+    rob1 = Robot([4, 1],k = 0.1)
+    rob2 = Robot([2, 2],k = 0.1)
+    rob3 = Robot([5, 6],k = 0.1)
+    rob4 = Robot([3, 4],k = 0.1)
     robots = [rob1, rob2, rob3, rob4]
 
-    env = Environment(10, 10, 0.1, robots, alpha = -10, moving_target=True)
+    env = Environment(10, 10, 0.1, robots, alpha = 1)
 
     #env = Environment(1, 1, 0.2, robots)
     # env = Environment(10, 10, 0.1, robots, alpha = 0.9)
