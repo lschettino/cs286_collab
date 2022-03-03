@@ -75,11 +75,8 @@ class Environment(object):
         ----------
         p:
         """
-        #f_try = np.sqrt(sum((q - p)**2))
+        #We define the distance to be the euclidean distance between the 2 points
         f_try = sum((q - p)**2) * 0.5
-        #f_try = 0.5 * np.abs((q - p))**2)
-        # We define the distance to be the euclidean distance between the 2 points
-        
         
         return f_try 
 
@@ -130,7 +127,6 @@ class Environment(object):
             # Compute individual robot gradient p_i_dot as the sum of all of the partial sums
         for i, robot in enumerate(self.robots):
             sum_var = np.sum(robot_partial_sums[i], axis=0)
-            #print("sum var", sum_var)
             robot.input = sum_var #if not np.isnan(sum_var).any() else 0, 0 
             
        
@@ -208,14 +204,12 @@ def run_grid(env, iter):
         
     
     
-    #ax.set_xlim((-1, 11))
-    #ax.set_ylim((-1, 11))
-    ax.set_title("Trajectory plots: alpha = 0.5, k = 0.01, \n  constant importance values iter = 200")
-    # "Trajectory plots: alpha = -10, k = 1, \n constant importance values, iter = 200"
-    # "alpha = -10, k = 1, single target (5,5), iter = 200"
-    # "alpha = -10, k = 1, constant importance, iter = 200 with stochastic noise"
+    ax.set_xlim((-1, 11))
+    ax.set_ylim((-1, 11))
+    ax.set_title("Trajectory plot")
+    
     plt.legend() 
-    plt.savefig("./graphs/exp_1a_alpha0.5_k0.01.png")
+    plt.show()
     
 # generate target points
 def target(iter):
@@ -238,7 +232,7 @@ if __name__ == "__main__":
     rob4 = Robot([3, 4],k = 0.01)
     robots = [rob1, rob2, rob3, rob4]
 
-    env = Environment(10, 10, 0.1, robots, alpha = 0.5)
+    env = Environment(10, 10, 0.1, robots, alpha = -10)
 
     #env = Environment(1, 1, 0.2, robots)
     # env = Environment(10, 10, 0.1, robots, alpha = 0.9)
