@@ -31,7 +31,7 @@ class Robot(object):
 
 class Environment(object):
 
-    def __init__(self, width, height, res, robots, alpha = -10, sigma = 0, cov = 5, target = [], moving_target = False):       # width and height are in pixels, so actual dimensions are width * res in meters
+    def __init__(self, width, height, res, robots, alpha = -10, sigma = 0, cov = 100, target = [], moving_target = False):       # width and height are in pixels, so actual dimensions are width * res in meters
         self.width = width
         self.height = height
         self.res = res
@@ -58,7 +58,7 @@ class Environment(object):
     def mix_func(self, point, value=1):   
 
         # Get list of all the costs for every robot
-        f_lists = np.array([self.f(robot.state, point) for robot in self.robots])
+        f_lists = np.array([self.f(robot.stoch_state, point) for robot in self.robots])
         
         # Apply power of alpha coeffient
         raised_f = f_lists ** self.alpha
@@ -106,7 +106,7 @@ class Environment(object):
             
         ps = []
         for i, robot in enumerate(self.robots):
-            ps.append(robot.state)
+            ps.append(robot.stoch_state)
         # Perform integral over Q space 
         # (Space Q is modelled as discrete, hence a summation, over all the points is used to approximate the integral)
         
@@ -119,11 +119,11 @@ class Environment(object):
                     g_alpha = self.mix_func(q)
                     value = phi(x, y)
                     
-                    f_try = self.f(robot.state, q)
+                    f_try = self.f(robot.stoch_state, q)
                     if ps[i][0] == x and ps[i][1] == y: 
                         f_try = 1 
                     
-                    partial_sum = ((f_try/g_alpha) ** (self.alpha-1)) * (q - robot.state) * value
+                    partial_sum = ((f_try/g_alpha) ** (self.alpha-1)) * (q - robot.stoch_state) * value
                     
                     robot_partial_sums[i].append(partial_sum)         
 
@@ -208,14 +208,14 @@ def run_grid(env, iter):
         
     
     
-    ax.set_xlim((-1, 11))
-    ax.set_ylim((-1, 11))
-    ax.set_title("Trajectory plots: alpha = 1, k = 0.1, \n constant importance, iter = 200")
+    #ax.set_xlim((-1, 11))
+    #ax.set_ylim((-1, 11))
+    ax.set_title("Trajectory plots: alpha = 0.5, k = 0.01, \n  constant importance values iter = 200")
     # "Trajectory plots: alpha = -10, k = 1, \n constant importance values, iter = 200"
     # "alpha = -10, k = 1, single target (5,5), iter = 200"
     # "alpha = -10, k = 1, constant importance, iter = 200 with stochastic noise"
     plt.legend() 
-    plt.savefig("./graphs/exp_k0.1_a1.png")
+    plt.savefig("./graphs/exp_1a_alpha0.5_k0.01.png")
     
 # generate target points
 def target(iter):
@@ -232,13 +232,13 @@ def target(iter):
 
 if __name__ == "__main__":
 
-    rob1 = Robot([4, 1],k = 0.1)
-    rob2 = Robot([2, 2],k = 0.1)
-    rob3 = Robot([5, 6],k = 0.1)
-    rob4 = Robot([3, 4],k = 0.1)
+    rob1 = Robot([4, 1],k = 0.01)
+    rob2 = Robot([2, 2],k = 0.01)
+    rob3 = Robot([5, 6],k = 0.01)
+    rob4 = Robot([3, 4],k = 0.01)
     robots = [rob1, rob2, rob3, rob4]
 
-    env = Environment(10, 10, 0.1, robots, alpha = 1)
+    env = Environment(10, 10, 0.1, robots, alpha = 0.5)
 
     #env = Environment(1, 1, 0.2, robots)
     # env = Environment(10, 10, 0.1, robots, alpha = 0.9)
