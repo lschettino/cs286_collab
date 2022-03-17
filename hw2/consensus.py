@@ -74,7 +74,7 @@ class Graph(object):
         for node in self.node_list:
             string = string + node.state.astype('str') + "\t"
             out.append(node.state)
-        # print(string)
+        
 
         return out
 

@@ -31,7 +31,7 @@ class Robot(object):
 
 class Environment(object):
 
-    def __init__(self, width, height, res, robots, alpha = -10, sigma = 0, cov = 5, target = [], moving_target = False):       # width and height are in pixels, so actual dimensions are width * res in meters
+    def __init__(self, width, height, res, robots, alpha = -10, sigma = 0, cov = 100, target = [], moving_target = False):       # width and height are in pixels, so actual dimensions are width * res in meters
         self.width = width
         self.height = height
         self.res = res
@@ -58,7 +58,7 @@ class Environment(object):
     def mix_func(self, point, value=1):   
 
         # Get list of all the costs for every robot
-        f_lists = np.array([self.f(robot.state, point) for robot in self.robots])
+        f_lists = np.array([self.f(robot.stoch_state, point) for robot in self.robots])
         
         # Apply power of alpha coeffient
         raised_f = f_lists ** self.alpha
@@ -75,9 +75,8 @@ class Environment(object):
         ----------
         p:
         """
-        f_try = np.sqrt(sum((q - p)**2))  
-        # We define the distance to be the euclidean distance between the 2 points
-        
+        #We define the distance to be the euclidean distance between the 2 points
+        f_try = sum((q - p)**2) * 0.5
         
         return f_try 
 
@@ -104,7 +103,7 @@ class Environment(object):
             
         ps = []
         for i, robot in enumerate(self.robots):
-            ps.append(robot.state)
+            ps.append(robot.stoch_state)
         # Perform integral over Q space 
         # (Space Q is modelled as discrete, hence a summation, over all the points is used to approximate the integral)
         
@@ -117,18 +116,17 @@ class Environment(object):
                     g_alpha = self.mix_func(q)
                     value = phi(x, y)
                     
-                    f_try = self.f(robot.state, q)
+                    f_try = self.f(robot.stoch_state, q)
                     if ps[i][0] == x and ps[i][1] == y: 
                         f_try = 1 
                     
-                    partial_sum = ((f_try/g_alpha) ** (self.alpha-1)) * (q - robot.state) * value
+                    partial_sum = ((f_try/g_alpha) ** (self.alpha-1)) * (q - robot.stoch_state) * value
                     
                     robot_partial_sums[i].append(partial_sum)         
 
             # Compute individual robot gradient p_i_dot as the sum of all of the partial sums
         for i, robot in enumerate(self.robots):
             sum_var = np.sum(robot_partial_sums[i], axis=0)
-            #print("sum var", sum_var)
             robot.input = sum_var #if not np.isnan(sum_var).any() else 0, 0 
             
        
@@ -196,7 +194,7 @@ def run_grid(env, iter):
                 ax.plot(target_x[i], target_y[i], color="blue", marker='o', alpha=(i + 1)/len(env.target))
         else: # just a single target 
             target_x, target_y = env.target
-            ax.plot(target_x, target_y, color="red")
+            ax.plot(target_x, target_y, color="red", marker="x")
         
         
     # set Voronoi for coverage problems 
@@ -208,14 +206,16 @@ def run_grid(env, iter):
     
     ax.set_xlim((-1, 11))
     ax.set_ylim((-1, 11))
+    ax.set_title("Trajectory plot")
+    
     plt.legend() 
-    #plt.savefig("./graphs/1c.png")
+    plt.show()
     
 # generate target points
 def target(iter):
 
     r = 3 
-    prd = 80
+    prd = 800
     lst = [] 
     
     for i in range(iter): 
@@ -226,16 +226,16 @@ def target(iter):
 
 if __name__ == "__main__":
 
-    rob1 = Robot([4, 1])
-    rob2 = Robot([2, 2])
-    rob3 = Robot([5, 6])
-    rob4 = Robot([3, 4])
+    rob1 = Robot([4, 1],k = 0.01)
+    rob2 = Robot([2, 2],k = 0.01)
+    rob3 = Robot([5, 6],k = 0.01)
+    rob4 = Robot([3, 4],k = 0.01)
     robots = [rob1, rob2, rob3, rob4]
 
-    env = Environment(10, 10, 0.1, robots, alpha = -10, moving_target=True)
+    env = Environment(10, 10, 0.1, robots, alpha = -10)
 
     #env = Environment(1, 1, 0.2, robots)
     # env = Environment(10, 10, 0.1, robots, alpha = 0.9)
 
 
-    run_grid(env, 20)
+    run_grid(env, 200)
