@@ -62,11 +62,10 @@ class Environment(object):
     # call alphaweights to get an updated beta, then use that to update W.
     # the code will call update to progress the simulation
     def transition_W(self, alphaweights):
-        tempW = self.W.copy()
+        #tempW = self.W.copy()
         for i in range(self.leg_len):
             for j in range(self.full_len):
                 beta = alphaweights.betas[i][j]
-
                 if beta >= 0:
                     middle = 1 - np.exp(-beta / 2)
                     self.W[i][j] = middle / self.leg_len 
@@ -75,9 +74,7 @@ class Environment(object):
                     self.W[i][j] = middle / (2 * self.leg_len)
 
         for i in range(self.leg_len):
-            for j in range(self.full_len):
-                if i == j:
-                    self.W[i][j] = 1 - self.W[i].sum(axis=0)
+            self.W[i][i] += (1 - self.W[i].sum(axis=0))
         # n = max(self.spoof.min(), self.spoof.max(), key=abs)
 
 # it plots the states - basically the same function from HW 2
@@ -104,6 +101,9 @@ if __name__ == "__main__":
     # assume everything is in 1-D and fully connected
     leg = np.array([1, 2, 1.1, 1.9, 1.4, 2.3, 0.7, 2,1,2,1,2,1,0.5,0.8,1.5,1,2,1,2])
     spoof = np.array([4, 4, 4, 4])
+    
+    
+    
 
     # Setting up a new matrix of inputs for the dynamics
     alphas = np.ones((leg.shape[0] + spoof.shape[0], leg.shape[0] + spoof.shape[0]))
@@ -124,6 +124,7 @@ if __name__ == "__main__":
     leg_states = []
     leg_states.append(env.leg)
     for _ in range(iter):
+        alphas.update_betas()
         env.transition_W(alphas)        # update W at every iteration
         env.update()
 
@@ -131,4 +132,4 @@ if __name__ == "__main__":
 
     plot_states(np.array(leg_states))
 
-    print("out")
+    
