@@ -62,8 +62,23 @@ class Environment(object):
     # call alphaweights to get an updated beta, then use that to update W.
     # the code will call update to progress the simulation
     def transition_W(self, alphaweights):
+        tempW = self.W.copy()
+        for i in range(self.leg_len):
+            for j in range(self.full_len):
+                beta = alphaweights.betas[i][j]
 
-        raise NotImplementedError
+                if beta >= 0:
+                    middle = 1 - np.exp(-beta / 2)
+                    self.W[i][j] = middle / self.leg_len 
+                else:
+                    middle = np.exp(beta)
+                    self.W[i][j] = middle / (2 * self.leg_len)
+
+        for i in range(self.leg_len):
+            for j in range(self.full_len):
+                if i == j:
+                    self.W[i][j] = 1 - self.W[i].sum(axis=0)
+        # n = max(self.spoof.min(), self.spoof.max(), key=abs)
 
 # it plots the states - basically the same function from HW 2
 def plot_states(node_states):
