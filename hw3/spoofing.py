@@ -53,7 +53,6 @@ class Environment(object):
 
     # updates according to the system dynamics given
     def update(self):
-
         self.leg = np.matmul(self.W, np.concatenate((self.leg, self.spoof), axis=0))
         self.spoof = np.matmul(self.Theta, self.leg) + np.matmul(self.Omega, self.spoof)
 
@@ -95,11 +94,30 @@ def plot_states(node_states):
     plt.legend()
     plt.show()
 
+def plot_states_2(node_states):
+
+    steps = np.arange(len(node_states))
+
+    _, ax = plt.subplots()
+    for i in range(node_states.shape[1]):
+        line, = ax.plot(steps, node_states[:, i])
+        line.set_label(i)
+
+    # plot the average
+    line, = ax.plot(steps, np.ones(len(steps)) * np.average(node_states[0, :]))
+    line.set_label("average")
+
+    
+    plt.legend()
+    plt.show()
+
+
 
 if __name__ == "__main__":
 
     # assume everything is in 1-D and fully connected
-    leg = np.array([1, 2, 1.1, 1.9, 1.4, 2.3, 0.7, 2,1,2,1,2,1,0.5,0.8,1.5,1,2,1,2])
+    # leg = np.array([1, 2, 1.1, 1.9, 1.4, 2.3, 0.7, 2,1,2,1,2,1,0.5,0.8,1.5,1,2,1,2])
+    leg = 3 * np.random.randn(20) + 1.5
     spoof = np.array([4, 4, 4, 4])
     
     
@@ -118,7 +136,7 @@ if __name__ == "__main__":
     # Define the environment
     env = Environment(leg, spoof, theta, omega)
 
-    iter = 200
+    iter = 25
 
     # Run the simulation and plot
     leg_states = []
@@ -129,7 +147,10 @@ if __name__ == "__main__":
         env.update()
 
         leg_states.append(env.leg)
-
+    print(leg_states[-1])
     plot_states(np.array(leg_states))
+
+    std_devs = [0.1, 1, 3, 5]
+    final_vals = [1.83219122, 1.68985349, 0.87891457, 1.99743226]
 
     
