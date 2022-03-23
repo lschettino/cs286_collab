@@ -166,7 +166,7 @@ def run_grid(env, iter):
 
     ax.set_xlim((-1, 11))
     ax.set_ylim((-1, 11))
-    plt.title(f'Alpha-modified trajectory plot of Server robots in Client Coverage problem \n(k={env.servers[0].k}, legit_mean={env.legit_mean}, spoof_mean={env.spoof_mean}, std_dev=0.02)')
+    plt.title(f'Alpha-modified trajectory plot of Server robots in Client Coverage problem \n(k={env.servers[0].k}, legit_mean={env.legit_mean}, spoof_mean={env.spoof_mean})')
     plt.show()
 
 if __name__ == "__main__":
