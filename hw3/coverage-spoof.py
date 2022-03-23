@@ -69,10 +69,10 @@ class Environment(object):
 
     def sample_alphas(self, spoof_mean, legit_mean):
         # create local variable here to note which clients are spoofers!
-        sigma = 0.5
+        sigma = 0.1
         for client in self.clients:
-            alpha =  np.random.normal(spoof_mean if client.spoofer else legit_mean, sigma, 1)[0]
-       
+            alpha = np.random.normal(spoof_mean if client.spoofer else legit_mean, sigma, 1)[0]
+
             # Values of alpha must be between 0 and 1
             client.alpha = 0 if alpha < 0 else (1 if alpha > 1 else alpha)
 
@@ -166,7 +166,7 @@ def run_grid(env, iter):
 
     ax.set_xlim((-1, 11))
     ax.set_ylim((-1, 11))
-    plt.title(f'Alpha-modified trajectory plot of Server robots in Client Coverage problem \n(k={env.servers[0].k}, legit_mean={env.legit_mean}, spoof_mean={env.spoof_mean}, std_dev=0.5)')
+    plt.title(f'Alpha-modified trajectory plot of Server robots in Client Coverage problem \n(k={env.servers[0].k}, legit_mean={env.legit_mean}, spoof_mean={env.spoof_mean}, std_dev=0.02)')
     plt.show()
 
 if __name__ == "__main__":
@@ -175,7 +175,6 @@ if __name__ == "__main__":
     serv2 = Server([2, 2], k=0.5)
     #serv3 = Server([5, 6], k=0.5)
     #serv4 = Server([3, 4], k=0.5)
-    #servers = [serv1, serv2, serv3, serv4]
     servers = [serv1, serv2]
 
     client1 = Client([3,3], True)
@@ -184,6 +183,6 @@ if __name__ == "__main__":
     client4 = Client([8,3], True)
     clients = [client1, client2, client3, client4]
 
-    env = Environment(10, 10, 0.1, servers, clients, legit_mean=0.8, spoof_mean=0.2)
+    env = Environment(10, 10, 0.1, servers, clients)
 
     run_grid(env, 200)
