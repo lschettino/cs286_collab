@@ -69,7 +69,7 @@ class Environment(object):
 
     def sample_alphas(self, spoof_mean, legit_mean):
         # create local variable here to note which clients are spoofers!
-        sigma = 0.1
+        sigma = 0.5
         for client in self.clients:
             alpha =  np.random.normal(spoof_mean if client.spoofer else legit_mean, sigma, 1)[0]
        
@@ -153,7 +153,8 @@ def run_grid(env, iter):
             ax.scatter(c.state[0], c.state[1], marker='*', alpha=0.9)
             ax.annotate(f'C_{index}', (c.state[0], c.state[1] + 0.2), fontsize=7)
 
-    # set Voronoi
+    # COMMENTED OUT WHEN USING ONLY 2 servers
+    # set Voronoi 
     #vor = Voronoi(np.array(points))
     #voronoi_plot_2d(vor, show_vertices = False, line_colors='blue', ax=ax)
     
@@ -165,8 +166,7 @@ def run_grid(env, iter):
 
     ax.set_xlim((-1, 11))
     ax.set_ylim((-1, 11))
-    #plt.legend()
-    plt.title(f'Alpha-modified trajectory plot of Server robots in Client Coverage problem \n(k={env.servers[0].k}, legit_mean={env.legit_mean}, spoof_mean={env.spoof_mean})')
+    plt.title(f'Alpha-modified trajectory plot of Server robots in Client Coverage problem \n(k={env.servers[0].k}, legit_mean={env.legit_mean}, spoof_mean={env.spoof_mean}, std_dev=0.5)')
     plt.show()
 
 if __name__ == "__main__":
@@ -184,6 +184,6 @@ if __name__ == "__main__":
     client4 = Client([8,3], True)
     clients = [client1, client2, client3, client4]
 
-    env = Environment(10, 10, 0.1, servers, clients, legit_mean=0.95, spoof_mean=0.05)
+    env = Environment(10, 10, 0.1, servers, clients, legit_mean=0.8, spoof_mean=0.2)
 
     run_grid(env, 200)
