@@ -116,14 +116,17 @@ def plot_states_2(node_states):
 if __name__ == "__main__":
 
     # assume everything is in 1-D and fully connected
-    np.random.seed(286)
-    # leg = np.array([1, 2, 1.1, 1.9, 1.4, 2.3, 0.7, 2,1,2,1,2,1,0.5,0.8,1.5,1,2,1,2])
-    leg = 1 * np.random.randn(20) + 1.5
-    spoof = np.array([4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
+    
+    leg = np.array([1, 2, 1.1, 1.9, 1.4, 2.3, 0.7, 2,1,2,1,2,1,0.5,0.8,1.5,1,2,1,2])
+    spoof = np.array([4., 4., 4., 4.])
+    
+     # Uncomment for part 2b 
+    # np.random.seed(286) # for reproducible results 
+    # mean = 1.5
+    # std = 0.1 # also change for 1, 3, 5
+    # leg = std * np.random.randn(20) + mean 
     
     
-    
-
     # Setting up a new matrix of inputs for the dynamics
     alphas = np.ones((leg.shape[0] + spoof.shape[0], leg.shape[0] + spoof.shape[0]))
     alphas = 0.4 * alphas
@@ -137,30 +140,46 @@ if __name__ == "__main__":
     # Define the environment
     env = Environment(leg, spoof, theta, omega)
 
-    iter = 10
+    iter = 50
 
     # Run the simulation and plot
     leg_states = []
     leg_states.append(env.leg)
-    for _ in range(iter):
+    spoof_states = [] 
+    spoof_states.append(env.spoof)
+    
+    curr_spoof_val = 4.
+    
+    for i in range(iter):
+        # Uncomment for part 2e 
+        # Uncomment for sin pattern 
+        # sin_spoof = np.sin((2. * np.pi * i / 50.) + 10) + 4.
+        # env.spoof.fill(sin_spoof)
+        
+        # Uncomment for exponential pattern
+        # env.spoof.fill(curr_spoof_val * (1.01))
+        # curr_spoof_val *= 1.01 
+        
         alphas.update_betas()
         env.transition_W(alphas)        # update W at every iteration
         env.update()
 
         leg_states.append(env.leg)
+        spoof_states.append(env.spoof)
     print(leg_states[-1])
     plot_states(np.array(leg_states))
+    
 
-    num_spoofer = [2, 4, 8, 20]
-    final_vals = [1.70887816, 1.86829893, 2.16990608, 2.83404374]
+    # num_spoofer = [2, 4, 8, 20]
+    # final_vals = [1.70887816, 1.86829893, 2.16990608, 2.83404374]
 
-    _, ax = plt.subplots()
-    line = ax.scatter(num_spoofer, final_vals)
+    # _, ax = plt.subplots()
+    # line = ax.scatter(num_spoofer, final_vals)
 
-    plt.xlabel("Number of Spoofers")
-    plt.ylabel("Final Convergence Values")
-    plt.title("Comparing Converged Value for Number of Spoofers")
-    plt.show()
+    # plt.xlabel("Number of Spoofers")
+    # plt.ylabel("Final Convergence Values")
+    # plt.title("Comparing Converged Value for Number of Spoofers")
+    # plt.show()
 
     # std_devs = [0.1, 1, 3, 5]
     # final_vals = [1.83653285, 1.87401386, 1.95730544, 2.04059575]
@@ -173,5 +192,7 @@ if __name__ == "__main__":
     # plt.title("Comparing Converged Value for Standard Deviation")
     # plt.show()
 
+
+    
 
     
