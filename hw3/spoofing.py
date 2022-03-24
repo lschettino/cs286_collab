@@ -120,7 +120,7 @@ if __name__ == "__main__":
     leg = np.array([1, 2, 1.1, 1.9, 1.4, 2.3, 0.7, 2,1,2,1,2,1,0.5,0.8,1.5,1,2,1,2])
     spoof = np.array([4., 4., 4., 4.])
     
-     # Uncomment for part 2b 
+    # Uncomment for part 2b 
     # np.random.seed(286) # for reproducible results 
     # mean = 1.5
     # std = 0.1 # also change for 1, 3, 5
@@ -169,7 +169,19 @@ if __name__ == "__main__":
     print(leg_states[-1])
     plot_states(np.array(leg_states))
     
+    # Uncomment to plot graphs for 2b, 2c, 2d 
+    # std_devs = [0.1, 1, 3, 5]
+    # final_vals = [1.83653285, 1.87401386, 1.95730544, 2.04059575]
+    
+    
+    # _, ax = plt.subplots()
+    # line = ax.scatter(std_devs, final_vals)
 
+    # plt.xlabel("Standard Deviations")
+    # plt.ylabel("Final Convergence Values")
+    # plt.title("Comparing Converged Value for Standard Deviation")
+    # plt.show()
+    
     # num_spoofer = [2, 4, 8, 20]
     # final_vals = [1.70887816, 1.86829893, 2.16990608, 2.83404374]
 
@@ -181,16 +193,7 @@ if __name__ == "__main__":
     # plt.title("Comparing Converged Value for Number of Spoofers")
     # plt.show()
 
-    # std_devs = [0.1, 1, 3, 5]
-    # final_vals = [1.83653285, 1.87401386, 1.95730544, 2.04059575]
-
-    # _, ax = plt.subplots()
-    # line = ax.scatter(std_devs, final_vals)
-
-    # plt.xlabel("Standard Deviations")
-    # plt.ylabel("Final Convergence Values")
-    # plt.title("Comparing Converged Value for Standard Deviation")
-    # plt.show()
+    
 
 
     
