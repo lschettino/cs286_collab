@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt 
 import pandas as pd 
 
-task = "task3"
+task = "task2correct"
 poses = pd.read_csv(task + "_poses.txt", header=None,  sep = " ") 
 poses_odom = pd.read_csv(task + "_poses_odom.txt", header = None, sep = " ") 
 
