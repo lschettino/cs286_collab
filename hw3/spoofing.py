@@ -71,10 +71,11 @@ class Environment(object):
                 else:
                     middle = np.exp(beta)
                     self.W[i][j] = middle / (2 * self.leg_len)
-
+                    
+        # overwrite 
         for i in range(self.leg_len):
             self.W[i][i] += (1 - self.W[i].sum(axis=0))
-        # n = max(self.spoof.min(), self.spoof.max(), key=abs)
+        
 
 # it plots the states - basically the same function from HW 2
 def plot_states(node_states):
