@@ -21,6 +21,19 @@ def find_pickup_probability():
     # the value p: float. p is the pickup probability of location (x,y)
     # sum(pickup_distribution.values()) should be 1
     ################################# Begin your code ###############################
+    total = 0
+    for index, row in time_pickup_dropoff_data.iterrows():
+        total += 1
+        pu_x = row['pickup_x']
+        pu_y = row['pickup_y']
+
+        if (pu_x, pu_y) not in pickup_distribution:
+            pickup_distribution[(pu_x, pu_y)] = 0
+        pickup_distribution[(pu_x, pu_y)] += 1
+
+    for key, value in pickup_distribution.items(): 
+        pickup_distribution[key] = value / total 
+
 
     ################################# End your code #################################
     plot_distribution(pickup_distribution, "Pickup distribution")
@@ -38,6 +51,18 @@ def find_dropoff_probability():
     # the value p: float. p is the dropoff probability of location (x,y)
     # sum(dropoff_distribution.values()) should be 1
     ################################# Begin your code ###############################
+    total = 0
+    for index, row in time_pickup_dropoff_data.iterrows():
+        total += 1
+        do_x = row['dropoff_x']
+        do_y = row['dropoff_y']
+
+        if (do_x, do_y) not in dropoff_distribution:
+            dropoff_distribution[(do_x, do_y)] = 0
+        dropoff_distribution[(do_x, do_y)] += 1
+
+    for key, value in dropoff_distribution.items(): 
+        dropoff_distribution[key] = value / total 
 
     ################################# End your code #################################
     #return dropoff_distribution
