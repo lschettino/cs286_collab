@@ -37,8 +37,9 @@ class base_policy:
         # Else if the taxi is available, return the direction of motion using the taxi ell's location and the nearest request's pickup location
         ################################# Begin your code ###############################
 
-        if len(taxi_state_object.outstanding_requests) == 0:
+        if len(taxi_state_object.outstanding_requests) == 0 or taxi_state_object.time_left_in_current_trip[ell] > 0:
             return 0
+
         ell_location = taxi_state_object.agent_locations[ell]
 
         request_ind = 0
@@ -51,7 +52,7 @@ class base_policy:
                 request_ind = ind
             ind += 1
 
-        if dist == 0:
+        if smallest_distance == 0:
             control_component = 5 + request_ind
         else:
             control_component = self.next_direction(ell_location, taxi_state_object.outstanding_requests[request_ind])

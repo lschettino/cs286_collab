@@ -87,6 +87,7 @@ class state:
         # print('stage_cost ', stage_cost)
         mask = [True for s in range(stage_cost)]
         for ell in range(self.g.m):
+            print(control)
             if (self.time_left_in_current_trip[ell] > 0):
                 self.time_left_in_current_trip[ell] -= 1
 
