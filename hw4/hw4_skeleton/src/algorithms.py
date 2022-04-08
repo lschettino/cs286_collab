@@ -16,7 +16,7 @@ class standard_rollout:
 
     def expectation_for_minimization(self, taxi_state_object, control):
         expected_cost = 0
-        for num_simu in range(10):
+        for num_simu in range(50):
             state_object = copy.deepcopy(taxi_state_object) #use state_object for further operations inside this function
             # update expected_cost using the 1) the next_state with the given control 2) future cost using the average_MC_simulation using base policy
             ################################# Begin your code ###############################
@@ -41,7 +41,6 @@ class standard_rollout:
         #print('get_control() standard_rollout')
         min_control = 0
         list_of_all_control_component_sets = [[] for ell in range(taxi_state_object.g.m)]
-        print(list_of_all_control_component_sets)
         control_cost = {}  # A dictionary with <key: control, value: expected sum of the stage cost and expected future cost>
         # Populate list_of_all_control_component_sets using available_control_agent for all agents
         # Create cartesian product from list_of_all_control_component_sets
@@ -67,7 +66,7 @@ class one_at_a_time_rollout:
 
     def expectation_for_minimization(self, taxi_state_object, control):
         expected_cost = 0
-        for num_simu in range(10):
+        for num_simu in range(50):
             state_object = copy.deepcopy(taxi_state_object) #use state_object for further operations inside this function
             # update expected_cost using the 1) the next_state with the given control 2) future cost using the average_MC_simulation using base policy
             ################################# Begin your code ###############################
@@ -95,21 +94,21 @@ class one_at_a_time_rollout:
         # Set the minimizing control component for agent ell in one_at_a_time_rollout_control from the dictionary
         ################################# Begin your code ###############################
         base_policy_control = base_policy().get_control(taxi_state_object)
-        print("base, pol", base_policy_control)
+
 
         one_at_a_time_rollout_control = []
         m = taxi_state_object.g.m
-        control_construction = [0] * m 
         for ell in range(m): 
-            control_construction[0: ell - 1] = one_at_a_time_rollout_control[0: ell - 1]
-            control_construction[ell + 1: m - 1] = one_at_a_time_rollout_control[ell + 1: m - 1]
+            # TO DO: INDICES CHECK 
+            control_construction = base_policy_control
+            control_construction[0: ell] = one_at_a_time_rollout_control[0: ell]
+            control_construction[ell + 1: m ] = base_policy_control[ell + 1: m ]
             con_dic = {}
 
             for comp in taxi_state_object.available_control_agent(ell):
-                control_construction[ell] = (comp,)
-                print(control_construction)
+                control_construction[ell] = comp
                 con_dic[comp] = self.expectation_for_minimization(taxi_state_object, control_construction)
-            one_at_a_time_rollout_control.append(minimization_of_expectations(con_dic))
+            one_at_a_time_rollout_control.append(self.minimization_of_expectations(con_dic))
 
         ################################# End your code ###############################
         return one_at_a_time_rollout_control
@@ -147,7 +146,7 @@ def MC_simulation(taxi_state_object, policy_name='base_policy', do_print=True):
 
 def average_MC_simulation(taxi_state_object, policy_name='base_policy', do_print=True):
     trajectory_cost_average = 0
-    for num_simu in range(10):
+    for num_simu in range(50):
         trajectory_cost_, _ = MC_simulation(taxi_state_object, policy_name, do_print)
         trajectory_cost_average += trajectory_cost_#+term_cost
     trajectory_cost_average /=10.0
