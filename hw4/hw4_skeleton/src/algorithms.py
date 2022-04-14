@@ -10,20 +10,21 @@ class standard_rollout:
         # for example if list_of_all_control_component_sets = [[1, 2, 3],[4,5,6]]
         # the function should return [(1, 4), (1, 5), (1, 6), (2, 4), (2, 5), (2, 6), (3, 4), (3, 5), (3, 6)]
         ################################# Begin your code ###############################
-        return itertools.product(*list_of_all_control_component_sets)
+        return list(itertools.product(*list_of_all_control_component_sets))
         ################################# End your code ###############################
 
 
     def expectation_for_minimization(self, taxi_state_object, control):
         expected_cost = 0
-        for num_simu in range(50):
+        simulations = 100
+        for num_simu in range(simulations):
             state_object = copy.deepcopy(taxi_state_object) #use state_object for further operations inside this function
             # update expected_cost using the 1) the next_state with the given control 2) future cost using the average_MC_simulation using base policy
             ################################# Begin your code ###############################
             expected_cost += state_object.next_state(control) 
             expected_cost += average_MC_simulation(state_object)
             ################################# End your code ###############################
-        expected_cost /= 10.0
+        expected_cost /= simulations
         return expected_cost
 
     def minimization_of_expectations(self, control_cost):
@@ -66,14 +67,15 @@ class one_at_a_time_rollout:
 
     def expectation_for_minimization(self, taxi_state_object, control):
         expected_cost = 0
-        for num_simu in range(50):
+        simulations = 100
+        for num_simu in range(simulations):
             state_object = copy.deepcopy(taxi_state_object) #use state_object for further operations inside this function
             # update expected_cost using the 1) the next_state with the given control 2) future cost using the average_MC_simulation using base policy
             ################################# Begin your code ###############################
             expected_cost += state_object.next_state(control) 
             expected_cost += average_MC_simulation(state_object)
             ################################# End your code ###############################
-        expected_cost /= 10.0
+        expected_cost /= simulations
         return expected_cost
 
     def minimization_of_expectations(self, control_cost):
@@ -81,7 +83,6 @@ class one_at_a_time_rollout:
         # The function should return 2
         ################################# Begin your code ###############################
         return min(control_cost, key=control_cost.get)
-        return 0
         ################################# End your code ###############################
 
     def get_control(self, taxi_state_object):
@@ -146,10 +147,11 @@ def MC_simulation(taxi_state_object, policy_name='base_policy', do_print=True):
 
 def average_MC_simulation(taxi_state_object, policy_name='base_policy', do_print=True):
     trajectory_cost_average = 0
-    for num_simu in range(50):
+    simulations = 100
+    for num_simu in range(simulations):
         trajectory_cost_, _ = MC_simulation(taxi_state_object, policy_name, do_print)
         trajectory_cost_average += trajectory_cost_#+term_cost
-    trajectory_cost_average /=10.0
+    trajectory_cost_average /= simulations
     if (do_print):
         print('Inside average_MC_simulation: average_MC_simulation ', trajectory_cost_average)
     return trajectory_cost_average
@@ -204,6 +206,7 @@ def read_saved_requests(taxi_state_object):
         for rows in reader:
             time = int(rows[0])
             request_details = (int(rows[1]),int(rows[2]),int(rows[3]),int(rows[4]))
+            print(time)
             all_requests[time].append(request_details)
     return all_requests
 

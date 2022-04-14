@@ -7,7 +7,7 @@ class globals:
         self.m = 3
         self.num_x = 5
         self.num_y = 4
-        self.N = 20
+        self.N = 10
 
         self.pickup_distribution = {}
         with open(self.base_folder+'/../data/pickup_distribution.csv', mode='r') as infile:
