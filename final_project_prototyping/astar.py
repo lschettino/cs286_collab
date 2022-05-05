@@ -69,7 +69,7 @@ def astar(maze, start, end):
                 continue
 
             # Make sure walkable terrain
-            if maze[node_position[0]][node_position[1]] not in [VISIBLE_VAL_R, ROBOT_VAL_R, BEACON_VAL_R]:
+            if maze[node_position[0]][node_position[1]] not in [VISIBLE_VAL_R, ROBOT_VAL_R, BEACON_VAL_R, FRONTIER_VAL_R]:
                 continue
 
             # Create new node

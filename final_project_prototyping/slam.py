@@ -1,3 +1,4 @@
+from pickle import NONE
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -9,7 +10,7 @@ from constants import *
 import cv2
 import PIL
 from astar import astar
-
+import os
 
 
 
@@ -25,10 +26,8 @@ class WiFi_BEACON():
         self.is_hidden = True
     
 
-
-
 class ROBOT():
-    def __init__(self, initial_position, env, beacon, initial_orientation=0):
+    def __init__(self, initial_position, env, initial_orientation=0):
         
         # Class type map
         self.env = env
@@ -48,15 +47,18 @@ class ROBOT():
 
         self.frontier_exploration_map = []
 
-        self.beacon = beacon
-        self.env.map[beacon.loc[0]][beacon.loc[1]] = BEACON_VAL
-
         self.AOA_measurement = None
-
-
+        self.occupied = False 
+        self.beacon = None
+        self.beacon_found = False 
         # Initalize the map with the first shadowcast, and frontier measurement
         self.shadowcast()
         self.get_frontiers()
+
+
+    def assign_beacon(self,beacon):
+        self.beacon = beacon
+        self.env.map[beacon.loc[0]][beacon.loc[1]] = BEACON_VAL
         self.measure_AOA()
 
     def loc_tuple(self):
@@ -114,8 +116,6 @@ class ROBOT():
         self.shadowcast()
         # Get frontiers as it moves
         self.get_frontiers()
-
-
 
     
     def shadowcast(self):
@@ -203,12 +203,12 @@ class ROBOT():
                     frontier_exploration_map[q] == state_dict['FCL']
 
                 # Save data of New Frontier
-                self.frontiers.append(new_frontier)
 
+                self.frontiers.append(new_frontier)
+  
                 # Mark all points of new frontier as Map-Closed-List
                 for point in new_frontier:
                     frontier_exploration_map[point] = state_dict['MCL']
-
 
             for v in _adjacent_points(p, self.env.dimensions):
                 # if v not marked as {Map-Open-List, Map-Closed-List} and v has at least one Map-Open-Space neighbor
@@ -300,7 +300,7 @@ class ROBOT():
         ax.invert_yaxis() # seaborn shows the first row at the top
         ax.set_title(header)
 
-        plt.savefig('/Users/roquero/Documents/Courses/CS286/final_project_prototyping/recordings/frames/'+filename+".png")
+        plt.savefig(os.getcwd() + '/recordings/frames/'+filename+".png")
         
 
     def path_planning(self, destination, algorithm='ASTAR'):
@@ -308,6 +308,7 @@ class ROBOT():
 
         if algorithm == 'ASTAR':
             maze = self.robot_map
+            print(self.robot_map)
             start = self.loc_tuple()
             end = destination
             
@@ -345,11 +346,12 @@ class ROBOT():
         iter_count = 0
         frame_counter = 0
 
-        while not self.beacon_found and iter_count < 10:
+        while not self.beacon_found and iter_count < 30:
+            print('Done is run slam')
+            print(self.frontiers)
+            # self.shadowcast()
+            # self.get_frontiers()
 
-            self.shadowcast()
-            self.get_frontiers()
-            
             self.save_map_frame(filename="" + str(frame_counter), header="Iter: "+ str(iter_count))
             frame_counter+=1
 
@@ -366,55 +368,191 @@ class ROBOT():
                 #     - drop AOA guiding
                 #     - pathplan directly towards the beacon
 
-                path = self.path_planning(tuple(self.beacon.loc))
+                path = self.path_planning(tuple(self.beacon.loc))  
 
                 for idx, point in enumerate(path):
                     self.move_jump(point[0], point[1])
                     self.save_map_frame(filename="" + str(frame_counter), header="Iter: "+ str(iter_count) + "   Path execution: " + str(idx))
-                    frame_counter+=1
-                
+                    frame_counter+=1           
 
                 
             else :
                 print('Beacon is still hidden')
                 print(set(self.AOA_measurement))
-                print(set(self.frontiers))
                 flatten_frontiers = []
                 for frontier in self.frontiers:
                     for point in frontier:
-                        flatten_frontiers.append(append)
+                        flatten_frontiers.append(point)
 
                 intersection = set(flatten_frontiers).intersection(self.AOA_measurement)
-                print(intersection)
-                return 0
-                path = self.path_planning(tuple(self.beacon.loc))
+                print(tuple(intersection)[0])
+                path = self.path_planning(tuple(intersection)[0])
                 
+                for idx, point in enumerate(path):
+                    self.move_jump(point[0], point[1])
+                    self.save_map_frame(filename="" + str(frame_counter), header="Iter: "+ str(iter_count) + "   Path execution: " + str(idx))
+                    frame_counter+=1
                 
-
-
             # Execute computed path
             
-                
-
-
             if self.loc == self.beacon.loc:
                 self.beacon_found = True
-            
+                self.occupied = False
             iter_count+=1
 
-        frames_path = '/Users/roquero/Documents/Courses/CS286/final_project_prototyping/recordings/frames/'
-        video_path = '/Users/roquero/Documents/Courses/CS286/final_project_prototyping/recordings/videos/video.mp4'
+        frames_path = os.getcwd() + '/recordings/frames/'
+        video_path = os.getcwd() + '/recordings/videos/video.mp4'
         # frames per second
         fps = 5
         generate_video(frames_path, video_path, fps)
 
             
 
+class Robot_System():
+
+    def __init__(self, env,robots, tasks):  
+        self.tasks = tasks
+        self.robots = robots 
+        self.env = env
+        self.total_tasks = len(tasks)
+        self.robots_map = np.array([[UNKNOWN_VAL_R] * env.dimensions[1] for row in range(env.dimensions[0])])
+        
+
+    def build_map(self):
+        for robot in self.robots:
+            self.env.map[robot.loc[0]][robot.loc[1]] = ROBOT_VAL
+            self.robots_map[robot.loc_tuple] = ROBOT_VAL_R
+
+    def assign_robots(self):
+        for robot in self.robots:
+            if robot.occupied == False:
+                for task in self.tasks:
+                    robot.assign_beacon(self.tasks.pop(0))
+
+    def combine_maps(self):
+        for r, row in enumerate(self.robots_map):
+            for c, cell in enumerate(row):
+                for robot in self.robots:
+                    if robot.robot_map[r][c] == 1 or robot.robot_map[r][c] == 10:
+                        self.map = robot.robot_map[r][c]
+        
+        for robot in self.robots:
+            robot.robot_map = self.robots_map
+
+    def print_map_PIL(self, with_AOA=False):
+        """
+        Print PIL image of the map
+
+        with_AOA: Flag to plot the tiles that are in the AOA trajectory
+        """
+        
+        rgb_map = []
+        for r, row in enumerate(self.robots_map):
+            row_vals = []
+            for c, cell in enumerate(row):
+                if with_AOA and self.robots[0].is_in_AOA_trajectory(r,c):
+                    row_vals.append(COLOR_MAP_R[BEACON_VAL_R])
+                else:
+                    row_vals.append(COLOR_MAP_R[cell])
+            rgb_map.append(row_vals)
+
+        rgb_map = np.array(rgb_map)
+
+        plt.imshow(rgb_map)
+        plt.show()
     
- 
+    def save_map_frame(self, filename, header ,with_AOA=False):
+        rgb_map = []
+        for r, row in enumerate(self.robots_map):
+            row_vals = []
+            for c, cell in enumerate(row):
+                if with_AOA and self.robots[0].is_in_AOA_trajectory(r,c):
+                    row_vals.append(COLOR_MAP_R[BEACON_VAL_R])
+                else:
+                    row_vals.append(COLOR_MAP_R[cell])
+            rgb_map.append(row_vals)
+
+        rgb_map = np.array(rgb_map)
+        
+        hor_mult_factor = int(FRAME_SIZE[0] / self.env.dimensions[0])
+        vert_mult_factor = int(FRAME_SIZE[1] / self.env.dimensions[1])
+
+        rgb_map = np.repeat(rgb_map, hor_mult_factor, axis=1)
+        rgb_map = np.repeat(rgb_map, vert_mult_factor, axis=0)
+
+        
+
+        fig, ax = plt.subplots()
+        ax.imshow(rgb_map, origin='lower')
+        ax.invert_yaxis() # seaborn shows the first row at the top
+        ax.set_title(header)
+
+        plt.savefig(os.getcwd() + '/recordings/frames/'+filename+".png")
+        
+
+    def run_slams(self):
+        self.build_map
+        iter_count = 0
+        frame_counter = 0
+        all_robots_done = 0 
+        while all_robots_done < self.total_tasks and iter_count < 10:
+
+            self.assign_robots()
+            # self.shadowcast()
+            # self.get_frontiers()
+            
+            self.save_map_frame(filename="" + str(frame_counter), header="Iter: "+ str(iter_count))
+            frame_counter+=1
+
+            for robot in self.robots:
+                if robot.occupied == True:
+                    robot.measure_AOA()
+                    self.combine_maps
+
+            self.save_map_frame(filename="" + str(frame_counter), header="Iter: "+ str(iter_count), with_AOA=True)
+            frame_counter+=1
+
+            self.print_map_PIL()
 
 
+            for robot in self.robots:
+                if robot.occupied == True:
+                    if not robot.beacon.is_hidden:
+                    
+                        # If the beacon is in the visible space of the robot
+                        #     - drop frontier exploration
+                        #     - drop AOA guiding
+                        #     - pathplan directly towards the beacon
 
+                        path = robot.path_planning(tuple(self.beacon.loc))  
+                        robot.move_jump(path[0], path[1])
+                    else:
+                        flatten_frontiers = []
+                        for frontier in robot.frontiers:
+                            for point in frontier:
+                                flatten_frontiers.append(point)
+
+                        intersection = set(flatten_frontiers).intersection(self.AOA_measurement)
+                        path = robot.path_planning(tuple(intersection)[0])
+                        robot.move_jump(path[0], path[1])
+
+                    if robot.loc == robot.beacon.loc:
+                        robot.beacon_found = True
+                        robot.occupied = False
+                        all_robots_done += 1
+            self.combine_maps()
+            self.save_map_frame(filename="" + str(frame_counter), header="Iter: "+ str(iter_count))
+            frame_counter+=1           
+            iter_count+=1        
+            # Execute computed path
+
+        frames_path = os.getcwd() + '/recordings/frames/'
+        video_path = os.getcwd() + '/recordings/videos/video.mp4'
+        # frames per second
+        fps = 5
+        generate_video(frames_path, video_path, fps)
+        
+    
 class SLAM_MAP():
     def __init__(self, map_dimensions, poly_obstacles, line_obstacles):
         
@@ -499,10 +637,19 @@ if __name__ == '__main__':
 
     slam_map = SLAM_MAP(map_dimensions , obstacles_poly, obstacles_line)
 
-    beacon_pos = [22,3]
+    beacon_pos = [20,3]
     beacon1 = WiFi_BEACON(beacon_pos, slam_map)
 
+    tasks = [beacon1]
+
     robot_pos = [1, 1]
-    robot = ROBOT(robot_pos, slam_map, beacon1)
-    robot.run_SLAM()
+    robot = ROBOT(robot_pos, slam_map)
+    
+    robot_pos_2 = [25, 25]
+    robot2 = ROBOT(robot_pos_2, slam_map)
+    robots = [robot, robot2]
+    robot_system = Robot_System(slam_map,robots, tasks)
+
+    robot_system.run_slams()
+    # robot2.run_SLAM()
 
