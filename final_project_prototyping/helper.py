@@ -112,7 +112,10 @@ def generate_video(pathIn, pathOut,fps=5, frame_ext='png'):
     frame_array = []
     files = [f for f in os.listdir(pathIn) if isfile(join(pathIn, f)) and f.endswith(frame_ext)]
     #for sorting the file names properly
-    files.sort(key = lambda x: x[:-4])
+    files.sort(key=lambda x: int(x.replace(".png", "")))
+    for file in files:
+        file += ".png"
+    
     for i in range(len(files)):
         filename=pathIn + files[i]
         #reading each files

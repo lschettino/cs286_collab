@@ -413,20 +413,25 @@ class Robot_System():
         self.total_tasks = len(tasks)
         self.robots_map = np.array([[UNKNOWN_VAL_R] * env.dimensions[1] for row in range(env.dimensions[0])])
         
-
+    # Build initial map for all robots 
     def build_map(self):
         for robot in self.robots:
             self.env.map[robot.loc[0]][robot.loc[1]] = ROBOT_VAL
             self.robots_map[robot.loc_tuple] = ROBOT_VAL_R
-
+    # Assign beacon finidng task to each robot
     def assign_robots(self):
+        print("here we are")
         for robot in self.robots:
             if robot.occupied == False:
-
                 for task in self.tasks:
+                    print("Assigning new task")
                     robot.assign_beacon(self.tasks.pop(0))
                     robot.occupied = True
-
+                    robot.beacon_found = False
+                    # robot.shadowcast()
+                    # robot.get_frontiers()
+                    break
+    #Combine the maps of each robot to share what they see
     def combine_maps(self):
         new_map = np.array([[UNKNOWN_VAL_R] * self.env.dimensions[1] for row in range(self.env.dimensions[0])])
         for r, row in enumerate(self.robots_map):
@@ -436,7 +441,10 @@ class Robot_System():
                         new_map[r][c] = robot.robot_map[r][c]
         self.robots_map = new_map
         
+        #Check for beacon in other robots ? or just share whole map
         for robot in self.robots:
+            print("INdex of the beacons")
+            print(np.where(robot.robot_map == 10))
             robot.robot_map = self.robots_map
 
     def print_map_PIL(self, with_AOA=False):
@@ -517,8 +525,6 @@ class Robot_System():
 
             robot_paths = []
             for robot in self.robots:
-                print("this is it")
-                print(robot.occupied)
                 if robot.occupied == True:
                     path = []
                     if not robot.beacon.is_hidden:
@@ -527,27 +533,32 @@ class Robot_System():
                         #     - drop frontier exploration
                         #     - drop AOA guiding
                         #     - pathplan directly towards the beacon
-                        print(robot.beacon.loc)
+                        
                         path = robot.path_planning(tuple(robot.beacon.loc))  
                     else:
                         flatten_frontiers = []
                         for frontier in robot.frontiers:
                             for point in frontier:
                                 flatten_frontiers.append(point)
-                        print("Trying to path plan")
-                        print(flatten_frontiers)
+                        # print("Trying to path plan")
+                        # print(flatten_frontiers)
                         intersection = set(flatten_frontiers).intersection(robot.AOA_measurement)
-                        print(robot.AOA_measurement)
+                        # print(robot.AOA_measurement)
                         path = robot.path_planning(tuple(intersection)[0])
                         print("path")
                         print(path)
                     robot_paths.append(path)
             done = [0 for _ in range(len(self.robots))]
-            while sum(done) != len(self.robots):
+            #Check to see how many robots are still active 
+            while sum(done) != len(robot_paths):
                 print("Robot paths")
                 print(robot_paths)
                 print(len(robot_paths))
+                print(done)
+                print(len(self.robots))
+                
                 for idx, robot in enumerate(self.robots):
+                    print(idx)
                     if robot.occupied == True:
                         if len(robot_paths[idx]) > 0:
                             cur_path = robot_paths[idx].pop(0)
@@ -558,19 +569,25 @@ class Robot_System():
                             frame_counter+=1  
                             self.save_map_frame(filename="" + str(frame_counter), header="Iter: "+ str(iter_count))
                             if robot.loc == robot.beacon.loc:
-                                print("robot found")
                                 robot.beacon_found = True
                                 robot.occupied = False
+                                self.assign_robots()
+                                if robot.occupied:
+                                    robot.move_step(1,0)
+                                else:
+                                    # self.robots.pop(idx)
+                                    print("hi")
                                 all_robots_done += 1
                                 if len(robot_paths[idx]) == 0:
                                     done[idx] = 1
                         else:
-                            print("popping")
-                            print(len(robot_paths))
                             if len(robot_paths[idx]) > 0:
                                 del robot_paths[idx]
                             else:
                                 done[idx] = 1
+            for idx,robot in enumerate(self.robots):
+                if robot.occupied == False:
+                    self.robots.pop(idx)
                      
             iter_count+=1        
             # Execute computed path
@@ -672,13 +689,23 @@ if __name__ == '__main__':
     beacon_pos2 = [20,10]
     beacon2 = WiFi_BEACON(beacon_pos2, slam_map)
 
-    tasks = [beacon1, beacon2]
+
+    beacon_pos3 = [25,3]
+    beacon3 = WiFi_BEACON(beacon_pos3, slam_map)
+
+    tasks = [beacon1, beacon2, beacon3]
 
     robot_pos = [1, 1]
     robot = ROBOT(robot_pos, slam_map)
     
     robot_pos_2 = [25, 25]
     robot2 = ROBOT(robot_pos_2, slam_map)
+
+
+    robot_pos_3 = [10, 10]
+    robot3 = ROBOT(robot_pos_3, slam_map)
+
+
     robots = [robot, robot2]
     robot_system = Robot_System(slam_map,robots, tasks)
 
