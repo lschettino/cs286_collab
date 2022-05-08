@@ -670,18 +670,63 @@ if __name__ == '__main__':
     map_dimensions = (30,30)
     # Obstacles are polygones defined by at LEAST 3 vertices and the space between 
     # the vertices is filled with obstacle
-    obstacles_poly = [
-            [(0,0), (0,8), (5,8)],
-            [(15,15), (15,27), (18,22)],    
-        ]
+    # obstacles_poly = [
+    #         [(0,0), (0,8), (5,8)],
+    #         [(15,15), (15,27), (18,22)],    
+    #         [(5,20), (10,20), (7,25)],
+    #         [(20,20), (25,20), (22,25)]
+
+    #     ]
+    
+    # # Draw obstacle lines from at least 2 vertices
+    # obstacles_line = [
+    #     [(3,2),(3,6)],
+    #     [(18,2),(18,6)],
+  
+    # ]
+
+    # obstacles_poly_2 = [
+    #         [(10,3), (5,7), (15,10)],
+    #         [(5,22), (10,27), (15,20)],    
+
+
+    # ]
+    
+    # # Draw obstacle lines from at least 2 vertices
+    # obstacles_line_2 = [
+    #     [(0,15),(5,15)],
+    #     [(10,15),(20,15)],
+    #     [(25,15),(29,15)],
+    #     [(25,20),(29,20)]
+
+  
+    # ]
+
+    obstacles_poly_3 = [
+            [(7,12), (3,16), (7,19)]  
+
+
+    ]
     
     # Draw obstacle lines from at least 2 vertices
-    obstacles_line = [
-        [(3,2),(3,6)]
+    obstacles_line_3 = [
+        [(7,7),(7,23)],
+        [(7,7),(23,7)],
+        [(7,23),(23,23)],
+        [(23,7),(23,12)],
+        [(23,18),(23,23)],
+        [(23,13),(18,13)],
+        [(15,13),(10,13)],
+        [(23,18),(15,18)],
+        [(12,18),(7,18)],
+
+  
     ]
     
 
-    slam_map = SLAM_MAP(map_dimensions , obstacles_poly, obstacles_line)
+    slam_map = SLAM_MAP(map_dimensions , obstacles_poly_3, obstacles_line_3)
+
+    slam_map.print_map_PIL()
 
     beacon_pos = [20,3]
     beacon1 = WiFi_BEACON(beacon_pos, slam_map)
@@ -709,6 +754,6 @@ if __name__ == '__main__':
     robots = [robot, robot2]
     robot_system = Robot_System(slam_map,robots, tasks)
 
-    robot_system.run_slams()
+    # robot_system.run_slams()
     # robot2.run_SLAM()
 
